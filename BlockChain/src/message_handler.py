@@ -14,4 +14,5 @@ class MessageHandler:
             for sock in readable:
                 if sock == self.peer.socket:
                     client, address = sock.accept()
+                    print(f"Connection from {address}") 
                     threading.Thread(target=self.peer.handle_client, args=(client, address), daemon=True).start()

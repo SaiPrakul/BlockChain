@@ -7,7 +7,7 @@ class Peer:
     def __init__(self):
         self.name = input("Enter your name: ")
         self.port = int(input("Enter your port number: "))
-        self.ip = "127.0.0.1"  # Using localhost for the sample workplan
+        self.ip = get_local_ip()
         self.peers = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.ip, self.port))
@@ -31,57 +31,32 @@ class Peer:
                 message = client.recv(1024).decode('utf-8').strip()
                 if not message:
                     continue
-                
-                # Parse message format: "IP:PORT teamname message"
-                parts = message.split(" ", 2)
-                if len(parts) >= 2:
-                    peer_info = parts[0].split(":")
-                    if len(peer_info) == 2:
-                        peer_ip = peer_info[0]
-                        peer_port = int(peer_info[1])
-                        if message.endswith("exit"):
-                            self.remove_peer((peer_ip, peer_port))
-                            print(f"\nPeer {peer_ip}:{peer_port} disconnected")
-                            break
-                        else:
-                            self.add_peer(peer_ip, peer_port)
-                            print(f"\nReceived: {message}")
+                if message == "exit":
+                    self.remove_peer(address)
+                    break
+                print(f"\nReceived from {address}: {message}")
             except:
+                self.remove_peer(address)
                 break
         client.close()
-
-    # def send_message(self, ip, port, message):
-    #     try:
-    #         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    #             s.connect((ip, port))
-    #             formatted_message = f"{self.ip}:{self.port} {self.name} {message}"
-    #             s.sendall(formatted_message.encode('utf-8'))
-    #             print(f"Message sent to {ip}:{port}")
-    #             if message != "exit":
-    #                 self.add_peer(ip, port)
-    #     except:
-    #         print(f"Failed to send message to {ip}:{port}")
 
     def send_message(self, ip, port, message):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((ip, port))
-                formatted_message = f"{self.ip}:{self.port} {self.name} {message}"
-                s.sendall(formatted_message.encode('utf-8'))
-                print(f"Message sent to {ip}:{port}")
-                # Removed self.add_peer(ip, port) since sender shouldn't add recipient to their peer list
+                s.sendall(message.encode('utf-8'))
+            print(f"Message sent to {ip}:{port}")
+            self.add_peer(ip, port)
         except:
             print(f"Failed to send message to {ip}:{port}")
 
-
     def add_peer(self, ip, port):
-        peer_key = (ip, port)
-        if peer_key not in self.peers:
-            self.peers[peer_key] = True
+        self.peers[(ip, port)] = True
 
     def remove_peer(self, address):
         if address in self.peers:
             del self.peers[address]
+            print(f"Peer {address} disconnected")
 
     def query_peers(self):
         if not self.peers:
@@ -97,9 +72,8 @@ class Peer:
             print("1. Send message")
             print("2. Query connected peers")
             print("0. Quit")
-            
             choice = input("Enter choice: ")
-            
+
             if choice == '1':
                 ip = input("Enter the recipient's IP address: ")
                 port = int(input("Enter the recipient's port number: "))

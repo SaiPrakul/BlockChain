@@ -7,7 +7,7 @@ class Peer:
     def __init__(self):
         self.name = input("Enter your name: ")
         self.port = int(input("Enter your port number: "))
-        self.ip = "127.0.0.1"  # Using localhost for the sample workplan
+        self.ip = get_local_ip() # Using localhost for the sample workplan
         self.peers = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.ip, self.port))

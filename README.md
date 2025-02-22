@@ -1,12 +1,27 @@
-# Peer-to-Peer Chat Application
+A peer-to-peer chat application that enables simultaneous sending and receiving of messages between multiple peers.
 
-This is a simple peer-to-peer chat application implemented in Python.
+Team Members
+Neelam Sai Sathwik (230041024)
+Md. Asif Hussain (230041021)
+Sai Prakul (230041031)
 
-## Team Members
-- [Your Name] (Roll Number)
-- [Team Member 2] (Roll Number)
-- [Team Member 3] (Roll Number)
+Features:
 
-## How to Run
-1. Ensure you have Python 3.7+ installed on your system.
-2. Clone this repository:
+Simultaneous message sending and receiving
+Support for multiple peer connections
+Query functionality to view active peers
+Bonus feature: Connect to active peers functionality
+Standardized message format
+Prevention of duplicate peer entries
+
+Libraries required:
+Python 3
+No external dependencies required (uses standard library only)
+
+Installation
+Clone the repository
+
+Running the Application
+Open multiple terminal windows (one for each peer)
+
+In each terminal, run: python main.py

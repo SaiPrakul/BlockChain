@@ -88,18 +88,6 @@ class Peer:
                 break
         client.close()
 
-    # def send_message(self, ip, port, message):
-    #     try:
-    #         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    #             s.connect((ip, port))
-    #             formatted_message = f"{self.ip}:{self.port} {self.name} {message}"
-    #             s.sendall(formatted_message.encode('utf-8'))
-    #             print(f"Message sent to {ip}:{port}")
-    #             if message != "exit":
-    #                 self.add_peer(ip, port)
-    #     except:
-    #         print(f"Failed to send message to {ip}:{port}")
-
     def send_message(self, ip, port, message):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

@@ -10,6 +10,18 @@ Sai Prakul (230041031)
 
 ------------------------------------------------------------------------------------------------------------------------------
 
+NOTE:
+
+This implementation includes the bonus question functionality allowing peers to:
+
+Query the list of peers they've received messages from
+
+Connect to active peers using the connect() function
+
+View connected peers in their peer list
+
+------------------------------------------------------------------------------------------------------------------------------
+
 Features:
 
 1.Simultaneous message sending and receiving
@@ -44,14 +56,4 @@ Running the Application:
 
 2.In each terminal, run:   python main.py
 
-------------------------------------------------------------------------------------------------------------------------------
 
-NOTE:
-
-This implementation includes the bonus question functionality allowing peers to:
-
-Query the list of peers they've received messages from
-
-Connect to active peers using the connect() function
-
-View connected peers in their peer list

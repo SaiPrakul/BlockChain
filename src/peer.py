@@ -62,42 +62,43 @@ class Peer:
             print(f"Failed to connect to peer {ip}:{port}")
 
     def handle_client(self, client, address):
-        while True:
-            try:
-                buffer = client.recv(1024).decode().strip()
-                if not buffer:
-                    continue
-                
-                # Parse sender's port from message header
-                sender_port = address[1]  # Default fallback
-                if buffer.startswith('<'):
-                    gt_pos = buffer.find('>')
-                    if gt_pos != -1:
-                        colon_pos = buffer.find(':', 1)
-                        if colon_pos != -1 and colon_pos < gt_pos:
-                            try:
-                                sender_port = int(buffer[colon_pos+1:gt_pos])
-                            except ValueError:
-                                pass
+        try:
+            buffer = client.recv(1024).decode().strip()
+            if not buffer:
+                peer_key = f"{address[0]}:{address[1]}"
+                self.remove_peer((address[0], address[1]))
+                print(f"Peer {peer_key} disconnected (empty buffer)")
+                return
 
-                # Extract message content
-                content = buffer
-                pos = content.find("> ")
-                if pos != -1:
-                    content = content[pos + 2:]
+            # Parse sender's port from message header
+            sender_port = address[1]
+            if buffer.startswith('<'):
+                gt_pos = buffer.find('>')
+                if gt_pos != -1:
+                    colon_pos = buffer.find(':', 1)
+                    if colon_pos != -1 and colon_pos < gt_pos:
+                        try:
+                            sender_port = int(buffer[colon_pos+1:gt_pos])
+                        except ValueError:
+                            pass
 
-                if content == "DISCONNECT":
-                    self.remove_peer((address[0], sender_port))
-                    print(f"\nPeer {address[0]}:{sender_port} disconnected")
-                    break
-                else:
-                    self.add_peer(address[0], sender_port)
-                    print(f"\nMessage from {address[0]}:{sender_port} -\n{buffer}")
-                    
-            except Exception as e:
-                print(f"Error handling client: {e}")
-                break
-        client.close()
+            if "DISCONNECT" in buffer:
+                peer_key = f"{address[0]}:{sender_port}"
+                self.remove_peer((address[0], sender_port))
+                print(f"Peer {peer_key} disconnected gracefully")
+                return
+            else:
+                self.add_peer(address[0], sender_port)
+                print(f"\nMessage from {address[0]}:{sender_port} -\n{buffer}")
+
+        except Exception as e:
+            peer_key = f"{address[0]}:{address[1]}"
+            self.remove_peer((address[0], address[1]))
+            print(f"Peer {peer_key} disconnected due to error: {e}")
+        finally:
+            client.close()
+
+
 
 
     def send_message(self, ip, port, message):
@@ -107,11 +108,12 @@ class Peer:
                 if message == "DISCONNECT":
                     formatted_message = f"<{self.ip}:{self.port}> DISCONNECT"
                 else:
-                    formatted_message = f"{self.ip}:{self.port}  {self.name}\n{message}\n"
+                    formatted_message = f"<{self.ip}:{self.port}> @ <{self.name}>\n{message}\n<end>"
                 s.sendall(formatted_message.encode())
                 print(f"Message sent to {ip}:{port}")
         except:
             print(f"Failed to send message to {ip}:{port}")
+
 
 
 
@@ -152,7 +154,9 @@ class Peer:
             elif choice == '3':
                 self.connect_to_active_peers()  # Added bonus functionality
             elif choice == '0':
-                print("Exiting")
+                for peer_ip, peer_port in list(self.peers.keys()):
+                    self.send_message(peer_ip, peer_port, "DISCONNECT")
+                print("Disconnected from all peers. Exiting...")
                 break
             else:
                 print("Invalid choice. Please try again.")

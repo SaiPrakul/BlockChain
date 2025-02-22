@@ -107,7 +107,7 @@ class Peer:
                 if message == "DISCONNECT":
                     formatted_message = f"<{self.ip}:{self.port}> DISCONNECT"
                 else:
-                    formatted_message = f"<{self.ip}:{self.port}> @ <{self.name}>\n{message}\n<end>"
+                    formatted_message = f"{self.ip}:{self.port}  {self.name}\n{message}\n"
                 s.sendall(formatted_message.encode())
                 print(f"Message sent to {ip}:{port}")
         except:

@@ -8,6 +8,7 @@ class Peer:
         self.name = input("Enter your name: ")
         self.port = int(input("Enter your port number: "))
         self.ip = get_local_ip()
+        print(f"Your IP address is {self.ip}")
         self.peers = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.ip, self.port))
@@ -63,41 +64,55 @@ class Peer:
     def handle_client(self, client, address):
         while True:
             try:
-                message = client.recv(1024).decode('utf-8').strip()
-                if not message:
+                buffer = client.recv(1024).decode().strip()
+                if not buffer:
                     continue
                 
-                parts = message.split(" ", 2)
-                if len(parts) >= 2:
-                    peer_info = parts[0].split(":")
-                    if len(peer_info) == 2:
-                        peer_ip = peer_info[0]
-                        peer_port = int(peer_info[1])
-                        
-                        if parts[2] == "connection_request":
-                            self.add_peer(peer_ip, peer_port)
-                            print(f"\nNew connection established from {peer_ip}:{peer_port}")
-                        elif parts[2] == "exit":
-                            self.remove_peer((peer_ip, peer_port))
-                            print(f"\nPeer {peer_ip}:{peer_port} disconnected")
-                            break
-                        else:
-                            self.add_peer(peer_ip, peer_port)
-                            print(f"\nReceived: {message}")
-            except:
+                # Parse sender's port from message header
+                sender_port = address[1]  # Default fallback
+                if buffer.startswith('<'):
+                    gt_pos = buffer.find('>')
+                    if gt_pos != -1:
+                        colon_pos = buffer.find(':', 1)
+                        if colon_pos != -1 and colon_pos < gt_pos:
+                            try:
+                                sender_port = int(buffer[colon_pos+1:gt_pos])
+                            except ValueError:
+                                pass
+
+                # Extract message content
+                content = buffer
+                pos = content.find("> ")
+                if pos != -1:
+                    content = content[pos + 2:]
+
+                if content == "DISCONNECT":
+                    self.remove_peer((address[0], sender_port))
+                    print(f"\nPeer {address[0]}:{sender_port} disconnected")
+                    break
+                else:
+                    self.add_peer(address[0], sender_port)
+                    print(f"\nMessage from {address[0]}:{sender_port} -\n{buffer}")
+                    
+            except Exception as e:
+                print(f"Error handling client: {e}")
                 break
         client.close()
+
 
     def send_message(self, ip, port, message):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((ip, port))
-                formatted_message = f"{self.ip}:{self.port} {self.name} {message}"
-                s.sendall(formatted_message.encode('utf-8'))
+                if message == "DISCONNECT":
+                    formatted_message = f"<{self.ip}:{self.port}> DISCONNECT"
+                else:
+                    formatted_message = f"<{self.ip}:{self.port}> @ <{self.name}>\n{message}\n<end>"
+                s.sendall(formatted_message.encode())
                 print(f"Message sent to {ip}:{port}")
-                # Removed self.add_peer(ip, port) since sender shouldn't add recipient to their peer list
         except:
             print(f"Failed to send message to {ip}:{port}")
+
 
 
     def add_peer(self, ip, port):
